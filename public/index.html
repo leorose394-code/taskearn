@@ -3,112 +3,451 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TaskEarn - Earn Rewards</title>
+  <title>TaskEarn - Earn by Completing Tasks</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
 
-  <header class="topbar">
-    <div class="nav">
+<header class="topbar">
+  <nav class="nav">
 
-      <button class="brand" onclick="showHome()">
-        💰 TaskEarn
+    <button class="brand" onclick="showHome()">
+      TaskEarn
+    </button>
+
+    <div class="navButtons" id="navButtons">
+      <button
+        class="btn btn-outline"
+        onclick="showAuth('login')"
+      >
+        Login
       </button>
 
-      <div id="navArea" class="navButtons">
-        <button class="btn btn-outline" onclick="showAuth('login')">
-          Login
-        </button>
+      <button
+        class="btn btn-primary"
+        onclick="showAuth('register')"
+      >
+        Create Account
+      </button>
+    </div>
 
-        <button class="btn btn-primary" onclick="showAuth('register')">
-          Create Account
-        </button>
+  </nav>
+</header>
+
+
+<main>
+
+  <!-- =========================
+       HOME
+  ========================== -->
+
+  <section id="homeView" class="view">
+
+    <div class="hero">
+
+      <div class="heroContent">
+
+        <div class="badge">
+          💰 Earn by completing tasks
+        </div>
+
+        <h1>
+          Complete Tasks.
+          <span>Earn Rewards.</span>
+        </h1>
+
+        <p class="heroText">
+          Welcome to TaskEarn. Complete simple tasks,
+          earn rewards and track your progress.
+        </p>
+
+        <div class="heroButtons">
+
+          <button
+            class="btn btn-primary btn-large"
+            onclick="showAuth('register')"
+          >
+            Get Started
+          </button>
+
+          <button
+            class="btn btn-outline btn-large"
+            onclick="showAuth('login')"
+          >
+            Login
+          </button>
+
+        </div>
+
+        <div class="heroStats">
+
+          <div>
+            <strong>Easy</strong>
+            <span>Simple tasks</span>
+          </div>
+
+          <div>
+            <strong>Fast</strong>
+            <span>Track rewards</span>
+          </div>
+
+          <div>
+            <strong>Free</strong>
+            <span>Create an account</span>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="earnCard">
+
+        <div class="earnIcon">
+          💰
+        </div>
+
+        <p class="smallText">
+          Example earnings
+        </p>
+
+        <h2>
+          ₦450
+        </h2>
+
+        <p>
+          Complete 3 example tasks
+          and watch your rewards grow.
+        </p>
+
+        <div class="progress">
+          <div class="progressBar"></div>
+        </div>
+
+        <small>
+          3 tasks completed
+        </small>
+
       </div>
 
     </div>
-  </header>
+
+  </section>
 
 
-  <main>
+  <!-- =========================
+       USER AUTH
+  ========================== -->
 
-    <!-- HOME -->
+  <section
+    id="authView"
+    class="view hidden"
+  >
 
-    <section id="homeView" class="view">
+    <div class="authWrapper">
 
-      <div class="hero">
+      <div class="authCard">
 
-        <div class="heroContent">
+        <button
+          class="backButton"
+          onclick="showHome()"
+        >
+          ← Back
+        </button>
 
-          <div class="badge">
-            💰 Earn by completing tasks
+        <div class="authIcon">
+          👤
+        </div>
+
+        <h2 id="authTitle">
+          Welcome Back
+        </h2>
+
+        <p id="authSubtitle">
+          Login to continue earning with TaskEarn.
+        </p>
+
+
+        <form id="authForm">
+
+          <!-- NAME -->
+
+          <div
+            id="nameField"
+            class="formGroup hidden"
+          >
+
+            <label for="name">
+              Full Name
+            </label>
+
+            <input
+              id="name"
+              type="text"
+              placeholder="Enter your full name"
+            >
+
           </div>
 
-          <h1>
-            Complete Tasks.
-            <span>Earn Rewards.</span>
-          </h1>
 
-          <p class="heroText">
-            Welcome to TaskEarn. Complete simple tasks,
-            earn rewards and track your progress from
-            one simple dashboard.
+          <!-- EMAIL -->
+
+          <div class="formGroup">
+
+            <label for="email">
+              Email
+            </label>
+
+            <input
+              id="email"
+              type="email"
+              placeholder="Enter your email"
+              required
+            >
+
+          </div>
+
+
+          <!-- PASSWORD -->
+
+          <div class="formGroup">
+
+            <label for="password">
+              Password
+            </label>
+
+            <input
+              id="password"
+              type="password"
+              placeholder="Enter your password"
+              minlength="6"
+              required
+            >
+
+          </div>
+
+
+          <button
+            id="authButton"
+            class="btn btn-primary btn-full"
+            type="submit"
+          >
+            Login
+          </button>
+
+        </form>
+
+
+        <button
+          id="authSwitch"
+          class="switchButton"
+          type="button"
+        >
+          Don't have an account? Create one
+        </button>
+
+
+        <p
+          id="authMessage"
+          class="message"
+        ></p>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================
+       USER DASHBOARD
+  ========================== -->
+
+  <section
+    id="dashboardView"
+    class="view hidden"
+  >
+
+    <div class="dashboard">
+
+      <div class="dashboardHeader">
+
+        <div>
+
+          <p class="eyebrow">
+            TASK EARN
           </p>
 
-          <div class="heroButtons">
+          <h2>
+            Welcome, <span id="userName">User</span> 👋
+          </h2>
 
-            <button
-              class="btn btn-primary btn-large"
-              onclick="showAuth('register')"
-            >
-              Get Started
-            </button>
+        </div>
 
-            <button
-              class="btn btn-outline btn-large"
-              onclick="showAuth('login')"
-            >
-              Login
-            </button>
+        <button
+          class="btn btn-outline"
+          onclick="logout()"
+        >
+          Logout
+        </button>
 
+      </div>
+
+
+      <!-- USER STATS -->
+
+      <div class="statsGrid">
+
+        <div class="statCard">
+
+          <div class="statIcon">
+            💰
           </div>
 
+          <div>
 
-          <div class="heroStats">
+            <span>
+              Balance
+            </span>
 
-            <div>
-              <strong>3+</strong>
-              <span>Example Tasks</span>
-            </div>
-
-            <div>
-              <strong>₦450+</strong>
-              <span>Example Rewards</span>
-            </div>
-
-            <div>
-              <strong>24/7</strong>
-              <span>Access</span>
-            </div>
+            <strong id="balance">
+              ₦0
+            </strong>
 
           </div>
 
         </div>
 
 
-        <div class="earnCard">
+        <div class="statCard">
 
-          <div class="earnIcon">
-            💰
+          <div class="statIcon">
+            📋
           </div>
 
-          <p class="smallText">
-            Example earnings
-          </p>
+          <div>
 
-          <h2>
-            ₦450
-          </h2>
+            <span>
+              Available Tasks
+            </span>
 
-          <p>
-            Complete 3 simple tasks and track
+            <strong id="availableCount">
+              0
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <div class="statCard">
+
+          <div class="statIcon">
+            ✅
+          </div>
+
+          <div>
+
+            <span>
+              Completed Tasks
+            </span>
+
+            <strong id="completedCount">
+              0
+            </strong>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- TASKS -->
+
+      <div class="sectionHeader">
+
+        <h2>
+          Available Tasks
+        </h2>
+
+      </div>
+
+
+      <div
+        id="taskList"
+        class="taskGrid"
+      ></div>
+
+
+      <p
+        id="dashMessage"
+        class="message"
+      ></p>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================
+       ADMIN LOGIN
+  ========================== -->
+
+  <section
+    id="adminLoginView"
+    class="view hidden"
+  >
+
+    <div class="authWrapper">
+
+      <div class="authCard">
+
+        <button
+          class="backButton"
+          onclick="showHome()"
+        >
+          ← Back
+        </button>
+
+        <div class="authIcon">
+          🔐
+        </div>
+
+        <h2>
+          Admin Login
+        </h2>
+
+        <p>
+          Sign in to manage TaskEarn.
+        </p>
+
+
+        <form id="adminLoginForm">
+
+          <div class="formGroup">
+
+            <label for="adminEmail">
+              Admin Email
+            </label>
+
+            <input
+              id="adminEmail"
+              type="email"
+              placeholder="Admin email"
+              required
+            >
+
+          </div>
+
+
+          <div class="formGroup">
+
+            <label for="adminPassword">
+              Password
+            </label>
+
+            <input
+              id="adminPassword"
+              type="password
