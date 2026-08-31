@@ -1,16 +1,17 @@
-let token = localStorage.getItem("taskearn_token");
+const API = "/api";
+
+let userToken = localStorage.getItem("taskearn_user_token");
 let adminToken = localStorage.getItem("taskearn_admin_token");
 
 let authMode = "login";
 
+// =========================
+// HELPERS
+// =========================
+
 function $(id) {
   return document.getElementById(id);
 }
-
-
-// =========================
-// VIEW CONTROL
-// =========================
 
 function hideAllViews() {
   $("homeView").classList.add("hidden");
@@ -20,305 +21,385 @@ function hideAllViews() {
   $("adminView").classList.add("hidden");
 }
 
-
 function showHome() {
   hideAllViews();
-
   $("homeView").classList.remove("hidden");
-
-  updateNav();
 }
 
-
 function showAuth(mode) {
-
-  authMode = mode;
-
   hideAllViews();
 
   $("authView").classList.remove("hidden");
 
-  const register = mode === "register";
-
-  $("authTitle").textContent =
-    register
-      ? "Create Your Account"
-      : "Login";
-
-  $("authSubtitle").textContent =
-    register
-      ? "Start earning with TaskEarn."
-      : "Welcome back to TaskEarn.";
-
-  $("authButton").textContent =
-    register
-      ? "Create Account"
-      : "Login";
-
-  $("nameField").classList.toggle(
-    "hidden",
-    !register
-  );
+  authMode = mode;
 
   $("authMessage").textContent = "";
 
-  $("authSwitch").textContent =
-    register
-      ? "Already have an account? Login"
-      : "New here? Create an account";
-
-  $("authSwitch").onclick = () => {
-    showAuth(
-      register
-        ? "login"
-        : "register"
-    );
-  };
-}
-
-
-// =========================
-// API HELPER
-// =========================
-
-async function api(url, options = {}) {
-
-  const headers = {
-    "Content-Type": "application/json"
-  };
-
-  if (options.admin) {
-
-    if (adminToken) {
-      headers.Authorization =
-        `Bearer ${adminToken}`;
-    }
-
+  if (mode === "register") {
+    $("authTitle").textContent = "Create Account";
+    $("authSubtitle").textContent =
+      "Create your TaskEarn account and start earning.";
+    $("authButton").textContent = "Create Account";
+    $("nameField").classList.remove("hidden");
+    $("name").required = true;
+    $("authSwitch").textContent =
+      "Already have an account? Login";
   } else {
-
-    if (token) {
-      headers.Authorization =
-        `Bearer ${token}`;
-    }
+    $("authTitle").textContent = "Welcome Back";
+    $("authSubtitle").textContent =
+      "Login to continue earning with TaskEarn.";
+    $("authButton").textContent = "Login";
+    $("nameField").classList.add("hidden");
+    $("name").required = false;
+    $("authSwitch").textContent =
+      "Don't have an account? Create one";
   }
-
-  const response = await fetch(url, {
-    ...options,
-    headers
-  });
-
-  const data =
-    await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(
-      data.error ||
-      "Something went wrong."
-    );
-  }
-
-  return data;
 }
 
+function showAdminLogin() {
+  hideAllViews();
+
+  $("adminLoginView").classList.remove("hidden");
+
+  $("adminLoginMessage").textContent = "";
+}
+
+function showDashboard() {
+  hideAllViews();
+
+  $("dashboardView").classList.remove("hidden");
+
+  loadDashboard();
+}
+
+function showAdminDashboard() {
+  hideAllViews();
+
+  $("adminView").classList.remove("hidden");
+
+  loadAdminDashboard();
+}
+
+function setMessage(element, text, success = false) {
+  element.textContent = text;
+
+  element.style.color = success
+    ? "#16a34a"
+    : "#dc2626";
+}
 
 // =========================
-// USER REGISTER / LOGIN
+// AUTH SWITCH
 // =========================
 
-$("authForm").addEventListener(
-  "submit",
-  async function(event) {
-
-    event.preventDefault();
-
-    $("authMessage").textContent =
-      "Please wait...";
-
-    try {
-
-      const body = {
-        email: $("email").value,
-        password: $("password").value
-      };
-
-      if (authMode === "register") {
-        body.name = $("name").value;
-      }
-
-      const data = await api(
-        authMode === "register"
-          ? "/api/register"
-          : "/api/login",
-        {
-          method: "POST",
-          body: JSON.stringify(body)
-        }
-      );
-
-      token = data.token;
-
-      localStorage.setItem(
-        "taskearn_token",
-        token
-      );
-
-      await loadDashboard();
-
-    } catch (error) {
-
-      $("authMessage").textContent =
-        error.message;
-    }
+$("authSwitch").addEventListener("click", () => {
+  if (authMode === "login") {
+    showAuth("register");
+  } else {
+    showAuth("login");
   }
-);
-
+});
 
 // =========================
-// USER DASHBOARD
+// USER LOGIN / REGISTER
+// =========================
+
+$("authForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const name = $("name").value.trim();
+  const email = $("email").value.trim();
+  const password = $("password").value;
+
+  const button = $("authButton");
+
+  button.disabled = true;
+
+  setMessage(
+    $("authMessage"),
+    authMode === "login"
+      ? "Logging in..."
+      : "Creating your account...",
+    true
+  );
+
+  try {
+    const endpoint =
+      authMode === "login"
+        ? "/login"
+        : "/register";
+
+    const body =
+      authMode === "login"
+        ? {
+            email,
+            password
+          }
+        : {
+            name,
+            email,
+            password
+          };
+
+    const response = await fetch(
+      API + endpoint,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || "Something went wrong."
+      );
+    }
+
+    userToken = data.token;
+
+    localStorage.setItem(
+      "taskearn_user_token",
+      userToken
+    );
+
+    $("authForm").reset();
+
+    setMessage(
+      $("authMessage"),
+      "Success! Loading your dashboard...",
+      true
+    );
+
+    setTimeout(() => {
+      showDashboard();
+    }, 500);
+
+  } catch (error) {
+
+    setMessage(
+      $("authMessage"),
+      error.message
+    );
+
+  } finally {
+
+    button.disabled = false;
+
+  }
+});
+
+// =========================
+// LOAD USER DASHBOARD
 // =========================
 
 async function loadDashboard() {
 
-  if (!token) {
-    showHome();
+  if (!userToken) {
+    showAuth("login");
     return;
   }
 
   try {
 
-    const me =
-      await api("/api/me");
+    const meResponse = await fetch(
+      API + "/me",
+      {
+        headers: {
+          Authorization:
+            "Bearer " + userToken
+        }
+      }
+    );
 
-    const taskData =
-      await api("/api/tasks");
+    if (!meResponse.ok) {
+      throw new Error("Session expired.");
+    }
 
-    hideAllViews();
+    const meData =
+      await meResponse.json();
 
-    $("dashboardView")
-      .classList.remove("hidden");
+    const user = meData.user;
 
     $("userName").textContent =
-      me.user.name;
+      user.name;
 
     $("balance").textContent =
-      `₦${Number(
-        me.user.balance
-      ).toLocaleString()}`;
+      "₦" + Number(user.balance).toLocaleString();
 
     $("completedCount").textContent =
-      me.user.completedTasks.length;
+      user.completedTasks.length;
 
-    const completed =
-      new Set(me.user.completedTasks);
+    const taskResponse =
+      await fetch(API + "/tasks");
 
-    const available =
+    const taskData =
+      await taskResponse.json();
+
+    const availableTasks =
       taskData.tasks.filter(
-        task => !completed.has(task.id)
+        task =>
+          !user.completedTasks.includes(
+            task.id
+          )
       );
 
     $("availableCount").textContent =
-      available.length;
+      availableTasks.length;
 
-    $("taskList").innerHTML =
-      taskData.tasks.map(task => {
-
-        const done =
-          completed.has(task.id);
-
-        return `
-          <div class="card">
-
-            <span class="pill">
-              Task #${task.id}
-            </span>
-
-            <h3>
-              ${escapeHtml(task.title)}
-            </h3>
-
-            <p>
-              ${escapeHtml(task.description)}
-            </p>
-
-            <div class="reward">
-              ₦${Number(
-                task.reward
-              ).toLocaleString()}
-            </div>
-
-            ${
-              done
-                ? `
-                  <button
-                    class="ghost full"
-                    disabled
-                  >
-                    ✓ Completed
-                  </button>
-                `
-                : `
-                  <button
-                    class="primary full"
-                    onclick="completeTask(${task.id})"
-                  >
-                    Complete Task
-                  </button>
-                `
-            }
-
-          </div>
-        `;
-
-      }).join("");
-
-    updateNav();
+    renderTasks(
+      taskData.tasks,
+      user.completedTasks
+    );
 
   } catch (error) {
 
-    token = null;
-
     localStorage.removeItem(
-      "taskearn_token"
+      "taskearn_user_token"
     );
 
-    showHome();
+    userToken = null;
+
+    showAuth("login");
+
+    setMessage(
+      $("authMessage"),
+      "Please login again."
+    );
   }
 }
 
+// =========================
+// RENDER USER TASKS
+// =========================
+
+function renderTasks(
+  tasks,
+  completedTasks
+) {
+
+  const list = $("taskList");
+
+  list.innerHTML = "";
+
+  if (!tasks.length) {
+
+    list.innerHTML = `
+      <div class="panel">
+        <h3>No tasks available</h3>
+        <p>Check back later for new tasks.</p>
+      </div>
+    `;
+
+    return;
+  }
+
+  tasks.forEach(task => {
+
+    const completed =
+      completedTasks.includes(task.id);
+
+    const card =
+      document.createElement("div");
+
+    card.className = "taskCard";
+
+    card.innerHTML = `
+      <h3>${escapeHTML(task.title)}</h3>
+
+      <p>
+        ${escapeHTML(task.description)}
+      </p>
+
+      <div class="reward">
+        ₦${Number(task.reward).toLocaleString()}
+      </div>
+
+      <button
+        class="btn ${
+          completed
+            ? "btn-outline"
+            : "btn-primary"
+        }"
+        ${
+          completed
+            ? "disabled"
+            : ""
+        }
+        onclick="completeTask(${task.id})"
+      >
+        ${
+          completed
+            ? "✓ Completed"
+            : "Complete Task"
+        }
+      </button>
+    `;
+
+    list.appendChild(card);
+  });
+}
 
 // =========================
 // COMPLETE TASK
 // =========================
 
-async function completeTask(id) {
+async function completeTask(taskId) {
+
+  if (!userToken) {
+    showAuth("login");
+    return;
+  }
 
   $("dashMessage").textContent =
     "Completing task...";
 
   try {
 
-    const data =
-      await api(
-        `/api/tasks/${id}/complete`,
+    const response =
+      await fetch(
+        `${API}/tasks/${taskId}/complete`,
         {
-          method: "POST"
+          method: "POST",
+          headers: {
+            Authorization:
+              "Bearer " + userToken
+          }
         }
       );
 
-    $("dashMessage").textContent =
-      `Success! You earned ₦${Number(
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        "Unable to complete task."
+      );
+    }
+
+    setMessage(
+      $("dashMessage"),
+      `🎉 Task completed! You earned ₦${Number(
         data.reward
-      ).toLocaleString()}.`;
+      ).toLocaleString()}.`,
+      true
+    );
 
     await loadDashboard();
 
   } catch (error) {
 
-    $("dashMessage").textContent =
-      error.message;
+    setMessage(
+      $("dashMessage"),
+      error.message
+    );
   }
 }
-
 
 // =========================
 // USER LOGOUT
@@ -328,65 +409,82 @@ async function logout() {
 
   try {
 
-    await api(
-      "/api/logout",
-      {
-        method: "POST"
-      }
-    );
+    if (userToken) {
 
-  } catch (error) {}
+      await fetch(
+        API + "/logout",
+        {
+          method: "POST",
+          headers: {
+            Authorization:
+              "Bearer " + userToken
+          }
+        }
+      );
+    }
 
-  token = null;
+  } catch (error) {
+    // Continue logout even if request fails
+  }
+
+  userToken = null;
 
   localStorage.removeItem(
-    "taskearn_token"
+    "taskearn_user_token"
   );
 
   showHome();
 }
 
-
 // =========================
 // ADMIN LOGIN
 // =========================
 
-function showAdminLogin() {
-
-  hideAllViews();
-
-  $("adminLoginView")
-    .classList.remove("hidden");
-}
-
-
 $("adminLoginForm").addEventListener(
   "submit",
-  async function(event) {
+  async event => {
 
     event.preventDefault();
 
-    $("adminLoginMessage")
-      .textContent =
-      "Please wait...";
+    const email =
+      $("adminEmail").value.trim();
+
+    const password =
+      $("adminPassword").value;
+
+    setMessage(
+      $("adminLoginMessage"),
+      "Signing in...",
+      true
+    );
 
     try {
 
-      const data =
-        await api(
-          "/api/admin/login",
+      const response =
+        await fetch(
+          API + "/admin/login",
           {
             method: "POST",
-
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
             body: JSON.stringify({
-              email:
-                $("adminEmail").value,
-
-              password:
-                $("adminPassword").value
+              email,
+              password
             })
           }
         );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+          "Admin login failed."
+        );
+      }
 
       adminToken = data.token;
 
@@ -395,23 +493,25 @@ $("adminLoginForm").addEventListener(
         adminToken
       );
 
-      await loadAdmin();
+      $("adminLoginForm").reset();
+
+      showAdminDashboard();
 
     } catch (error) {
 
-      $("adminLoginMessage")
-        .textContent =
-        error.message;
+      setMessage(
+        $("adminLoginMessage"),
+        error.message
+      );
     }
   }
 );
-
 
 // =========================
 // ADMIN DASHBOARD
 // =========================
 
-async function loadAdmin() {
+async function loadAdminDashboard() {
 
   if (!adminToken) {
     showAdminLogin();
@@ -420,48 +520,11 @@ async function loadAdmin() {
 
   try {
 
-    const stats =
-      await api(
-        "/api/admin/stats",
-        {
-          admin: true
-        }
-      );
+    await loadAdminStats();
 
-    const taskData =
-      await api("/api/tasks");
+    await loadAdminTasks();
 
-    const userData =
-      await api(
-        "/api/admin/users",
-        {
-          admin: true
-        }
-      );
-
-    hideAllViews();
-
-    $("adminView")
-      .classList.remove("hidden");
-
-    $("adminUsers").textContent =
-      stats.users;
-
-    $("adminTasks").textContent =
-      stats.tasks;
-
-    $("adminRewards").textContent =
-      `₦${Number(
-        stats.totalRewards
-      ).toLocaleString()}`;
-
-    renderAdminTasks(
-      taskData.tasks
-    );
-
-    renderUsers(
-      userData.users
-    );
+    await loadUsers();
 
   } catch (error) {
 
@@ -472,57 +535,125 @@ async function loadAdmin() {
     );
 
     showAdminLogin();
+
+    setMessage(
+      $("adminLoginMessage"),
+      "Admin session expired. Please login again."
+    );
   }
 }
 
+// =========================
+// ADMIN STATS
+// =========================
+
+async function loadAdminStats() {
+
+  const response =
+    await fetch(
+      API + "/admin/stats",
+      {
+        headers: {
+          Authorization:
+            "Bearer " + adminToken
+        }
+      }
+    );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error ||
+      "Unable to load statistics."
+    );
+  }
+
+  $("adminUsers").textContent =
+    data.users;
+
+  $("adminTasks").textContent =
+    data.tasks;
+
+  $("adminRewards").textContent =
+    "₦" +
+    Number(
+      data.totalRewards
+    ).toLocaleString();
+}
 
 // =========================
 // ADMIN TASKS
 // =========================
 
-function renderAdminTasks(tasks) {
+async function loadAdminTasks() {
 
-  if (!tasks.length) {
+  const response =
+    await fetch(
+      API + "/admin/tasks",
+      {
+        headers: {
+          Authorization:
+            "Bearer " + adminToken
+        }
+      }
+    );
 
-    $("adminTaskList").innerHTML =
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error ||
+      "Unable to load tasks."
+    );
+  }
+
+  const list =
+    $("adminTaskList");
+
+  list.innerHTML = "";
+
+  if (!data.tasks.length) {
+
+    list.innerHTML =
       "<p>No tasks available.</p>";
 
     return;
   }
 
-  $("adminTaskList").innerHTML =
-    tasks.map(task => `
+  data.tasks.forEach(task => {
 
-      <div class="adminTask">
+    const item =
+      document.createElement("div");
 
-        <div>
+    item.className = "adminItem";
 
-          <strong>
-            ${escapeHtml(task.title)}
-          </strong>
+    item.innerHTML = `
+      <div>
+        <h4>
+          ${escapeHTML(task.title)}
+        </h4>
 
-          <br>
-
-          <span class="muted">
-            ₦${Number(
-              task.reward
-            ).toLocaleString()}
-          </span>
-
-        </div>
-
-        <button
-          class="danger"
-          onclick="deleteTask(${task.id})"
-        >
-          Delete
-        </button>
-
+        <p>
+          ₦${Number(
+            task.reward
+          ).toLocaleString()}
+        </p>
       </div>
 
-    `).join("");
-}
+      <button
+        class="deleteButton"
+        onclick="deleteTask(${task.id})"
+      >
+        Delete
+      </button>
+    `;
 
+    list.appendChild(item);
+  });
+}
 
 // =========================
 // ADD TASK
@@ -530,138 +661,201 @@ function renderAdminTasks(tasks) {
 
 $("taskForm").addEventListener(
   "submit",
-  async function(event) {
+  async event => {
 
     event.preventDefault();
 
-    $("adminMessage").textContent =
-      "Adding task...";
+    const title =
+      $("taskTitle").value.trim();
+
+    const description =
+      $("taskDescription").value.trim();
+
+    const reward =
+      Number($("taskReward").value);
+
+    setMessage(
+      $("adminMessage"),
+      "Adding task...",
+      true
+    );
 
     try {
 
-      await api(
-        "/api/admin/tasks",
-        {
-          method: "POST",
+      const response =
+        await fetch(
+          API + "/admin/tasks",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+              Authorization:
+                "Bearer " + adminToken
+            },
+            body: JSON.stringify({
+              title,
+              description,
+              reward
+            })
+          }
+        );
 
-          admin: true,
+      const data =
+        await response.json();
 
-          body: JSON.stringify({
-
-            title:
-              $("taskTitle").value,
-
-            description:
-              $("taskDescription").value,
-
-            reward:
-              Number(
-                $("taskReward").value
-              )
-          })
-        }
-      );
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+          "Unable to add task."
+        );
+      }
 
       $("taskForm").reset();
 
-      $("adminMessage").textContent =
-        "Task added successfully.";
+      setMessage(
+        $("adminMessage"),
+        "Task added successfully! 🎉",
+        true
+      );
 
-      await loadAdmin();
+      await loadAdminDashboard();
 
     } catch (error) {
 
-      $("adminMessage").textContent =
-        error.message;
+      setMessage(
+        $("adminMessage"),
+        error.message
+      );
     }
   }
 );
-
 
 // =========================
 // DELETE TASK
 // =========================
 
-async function deleteTask(id) {
+async function deleteTask(taskId) {
 
-  if (
-    !confirm(
+  const confirmed =
+    confirm(
       "Are you sure you want to delete this task?"
-    )
-  ) {
+    );
+
+  if (!confirmed) {
     return;
   }
 
   try {
 
-    await api(
-      `/api/admin/tasks/${id}`,
-      {
-        method: "DELETE",
-        admin: true
-      }
-    );
+    const response =
+      await fetch(
+        `${API}/admin/tasks/${taskId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization:
+              "Bearer " + adminToken
+          }
+        }
+      );
 
-    await loadAdmin();
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        "Unable to delete task."
+      );
+    }
+
+    await loadAdminDashboard();
 
   } catch (error) {
 
-    alert(error.message);
+    setMessage(
+      $("adminMessage"),
+      error.message
+    );
   }
 }
 
-
 // =========================
-// USERS
+// ADMIN USERS
 // =========================
 
-function renderUsers(users) {
+async function loadUsers() {
 
-  if (!users.length) {
+  const response =
+    await fetch(
+      API + "/admin/users",
+      {
+        headers: {
+          Authorization:
+            "Bearer " + adminToken
+        }
+      }
+    );
 
-    $("userList").innerHTML =
-      "<p>No users registered yet.</p>";
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error ||
+      "Unable to load users."
+    );
+  }
+
+  const list =
+    $("userList");
+
+  list.innerHTML = "";
+
+  if (!data.users.length) {
+
+    list.innerHTML =
+      "<p>No registered users.</p>";
 
     return;
   }
 
-  $("userList").innerHTML =
-    users.map(user => `
+  data.users.forEach(user => {
 
-      <div class="userRow">
+    const item =
+      document.createElement("div");
 
-        <div>
+    item.className = "adminItem";
 
-          <strong>
-            ${escapeHtml(user.name)}
-          </strong>
+    item.innerHTML = `
+      <div>
+        <h4>
+          ${escapeHTML(user.name)}
+        </h4>
 
-          <br>
+        <p>
+          ${escapeHTML(user.email)}
+        </p>
+      </div>
 
-          <span class="muted">
-            ${escapeHtml(user.email)}
-          </span>
-
-        </div>
-
-        <div>
-
+      <div>
+        <strong>
           ₦${Number(
             user.balance
           ).toLocaleString()}
+        </strong>
 
-          ·
-
+        <p>
           ${user.completedTasks}
           completed
-
-        </div>
-
+        </p>
       </div>
+    `;
 
-    `).join("");
+    list.appendChild(item);
+  });
 }
-
 
 // =========================
 // ADMIN LOGOUT
@@ -678,104 +872,29 @@ function adminLogout() {
   showHome();
 }
 
+// =========================
+// SECURITY HELPER
+// =========================
+
+function escapeHTML(value) {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
 // =========================
-// NAVIGATION
+// INITIAL PAGE
 // =========================
 
-function updateNav() {
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
 
-  const nav =
-    $("navArea");
+    showHome();
 
-  if (adminToken) {
-
-    nav.innerHTML = `
-
-      <button
-        class="primary"
-        onclick="loadAdmin()"
-      >
-        Admin Dashboard
-      </button>
-
-    `;
-
-    return;
   }
-
-  if (token) {
-
-    nav.innerHTML = `
-
-      <button
-        class="primary"
-        onclick="loadDashboard()"
-      >
-        My Dashboard
-      </button>
-
-    `;
-
-    return;
-  }
-
-  nav.innerHTML = `
-
-    <button
-      class="ghost"
-      onclick="showAuth('login')"
-    >
-      Login
-    </button>
-
-    <button
-      class="primary"
-      onclick="showAuth('register')"
-    >
-      Create Account
-    </button>
-
-  `;
-}
-
-
-// =========================
-// HTML ESCAPE
-// =========================
-
-function escapeHtml(value) {
-
-  const div =
-    document.createElement("div");
-
-  div.textContent = value;
-
-  return div.innerHTML;
-}
-
-
-// =========================
-// START
-// =========================
-
-if (
-  new URLSearchParams(
-    window.location.search
-  ).get("admin") === "1"
-) {
-
-  showAdminLogin();
-
-} else if (adminToken) {
-
-  loadAdmin();
-
-} else if (token) {
-
-  loadDashboard();
-
-} else {
-
-  showHome();
-}
+);
