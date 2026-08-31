@@ -1,1 +1,378 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskEarn - Earn by Completing Tasks</title>  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f7fb;
+      color: #1f2937;
+    }
+
+    header {
+      background: #111827;
+      color: white;
+      padding: 18px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .nav {
+      max-width: 1100px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: #22c55e;
+    }
+
+    .nav-badge {
+      background: #1f2937;
+      border: 1px solid #374151;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #111827, #1f2937);
+      color: white;
+      padding: 55px 20px;
+    }
+
+    .hero-content {
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .hero h1 {
+      font-size: 42px;
+      line-height: 1.1;
+      margin-bottom: 15px;
+    }
+
+    .hero h1 span {
+      color: #22c55e;
+    }
+
+    .hero p {
+      max-width: 650px;
+      color: #d1d5db;
+      font-size: 17px;
+      line-height: 1.6;
+    }
+
+    .stats {
+      max-width: 1100px;
+      margin: -25px auto 35px;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      position: relative;
+    }
+
+    .stat {
+      background: white;
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    .stat-title {
+      color: #6b7280;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 25px;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      padding: 0 20px 50px;
+    }
+
+    .section-title {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .section-subtitle {
+      color: #6b7280;
+      margin-bottom: 25px;
+    }
+
+    #tasks {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .task-card {
+      background: white;
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.07);
+      border: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      min-height: 250px;
+    }
+
+    .task-number {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: #dcfce7;
+      color: #16a34a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-bottom: 18px;
+    }
+
+    .task-card h3 {
+      font-size: 19px;
+      margin-bottom: 10px;
+    }
+
+    .task-card p {
+      color: #6b7280;
+      line-height: 1.5;
+      font-size: 14px;
+      flex: 1;
+    }
+
+    .task-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      gap: 10px;
+    }
+
+    .reward {
+      color: #16a34a;
+      font-weight: bold;
+    }
+
+    .status {
+      font-size: 12px;
+      background: #dcfce7;
+      color: #15803d;
+      padding: 6px 9px;
+      border-radius: 20px;
+    }
+
+    .complete-btn {
+      width: 100%;
+      margin-top: 15px;
+      border: none;
+      background: #22c55e;
+      color: white;
+      padding: 12px;
+      border-radius: 9px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .complete-btn:hover {
+      background: #16a34a;
+    }
+
+    .complete-btn.completed {
+      background: #9ca3af;
+      cursor: default;
+    }
+
+    .loading {
+      grid-column: 1 / -1;
+      text-align: center;
+      background: white;
+      padding: 40px;
+      border-radius: 14px;
+    }
+
+    .error {
+      grid-column: 1 / -1;
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    footer {
+      background: #111827;
+      color: #9ca3af;
+      text-align: center;
+      padding: 25px 20px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 800px) {
+      .stats {
+        grid-template-columns: 1fr;
+        margin-top: 20px;
+      }
+
+      #tasks {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        font-size: 32px;
+      }
+    }
+
+    @media (min-width: 801px) and (max-width: 1000px) {
+      #tasks {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style></head><body>  <header>
+    <div class="nav">
+      <div class="logo">TaskEarn</div>
+      <div class="nav-badge">💰 Earn by completing tasks</div>
+    </div>
+  </header>  <section class="hero">
+    <div class="hero-content">
+      <h1>Complete Tasks.<br><span>Earn Rewards.</span></h1>
+      <p>
+        Welcome to TaskEarn. Complete simple tasks, build your progress,
+        and earn rewards along the way.
+      </p>
+    </div>
+  </section>  <section class="stats">
+    <div class="stat">
+      <div class="stat-title">Available Tasks</div>
+      <div class="stat-value" id="taskCount">...</div>
+    </div><div class="stat">
+  <div class="stat-title">Your Balance</div>
+  <div class="stat-value">₦0</div>
+</div>
+
+<div class="stat">
+  <div class="stat-title">Tasks Completed</div>
+  <div class="stat-value" id="completedCount">0</div>
+</div>
+
+  </section>  <main class="container">
+    <h2 class="section-title">Available Tasks</h2>
+    <p class="section-subtitle">
+      Choose a task below and complete it to earn your reward.
+    </p><div id="tasks">
+  <div class="loading">Loading tasks...</div>
+</div>
+
+  </main>  <footer>
+    © 2026 TaskEarn. All rights reserved.
+  </footer>  <script>
+    let completedTasks = 0;
+
+    async function loadTasks() {
+      const tasksContainer = document.getElementById("tasks");
+      const taskCount = document.getElementById("taskCount");
+
+      try {
+        const response = await fetch("/api/tasks");
+
+        if (!response.ok) {
+          throw new Error("Unable to load tasks");
+        }
+
+        const data = await response.json();
+        const tasks = data.tasks || [];
+
+        taskCount.textContent = tasks.length;
+
+        if (tasks.length === 0) {
+          tasksContainer.innerHTML = `
+            <div class="loading">
+              No tasks are available right now.
+            </div>
+          `;
+          return;
+        }
+
+        tasksContainer.innerHTML = tasks.map(task => `
+          <div class="task-card">
+            <div class="task-number">#${task.id}</div>
+
+            <h3>${escapeHtml(task.title)}</h3>
+
+            <p>${escapeHtml(task.description)}</p>
+
+            <div class="task-bottom">
+              <span class="reward">₦${Number(task.reward).toLocaleString()}</span>
+              <span class="status">${escapeHtml(task.status)}</span>
+            </div>
+
+            <button
+              class="complete-btn"
+              onclick="completeTask(this, ${task.id})"
+            >
+              Complete Task
+            </button>
+          </div>
+        `).join("");
+
+      } catch (error) {
+        console.error(error);
+
+        taskCount.textContent = "0";
+
+        tasksContainer.innerHTML = `
+          <div class="error">
+            <strong>Unable to load tasks.</strong><br>
+            Please refresh the page and try again.
+          </div>
+        `;
+      }
+    }
+
+    function completeTask(button, taskId) {
+      if (button.classList.contains("completed")) {
+        return;
+      }
+
+      button.classList.add("completed");
+      button.textContent = "✓ Completed";
+
+      completedTasks++;
+
+      document.getElementById("completedCount").textContent =
+        completedTasks;
+
+      alert(
+        "Task #" + taskId +
+        " marked as completed! Your reward system will be connected to your account later."
+      );
+    }
+
+    function escapeHtml(value) {
+      const div = document.createElement("div");
+      div.textContent = value;
+      return div.innerHTML;
+    }
+
+    loadTasks();
+  </script></body>
+</html>
