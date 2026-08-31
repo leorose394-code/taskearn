@@ -6,6 +6,8 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 app.use(express.json());
+
+// Serve everything inside /public
 app.use(express.static(path.join(__dirname, "public")));
 
 // =========================
@@ -74,7 +76,7 @@ function createToken() {
 }
 
 // =========================
-// USER AUTH MIDDLEWARE
+// USER AUTH
 // =========================
 
 function authenticateUser(req, res, next) {
@@ -89,7 +91,9 @@ function authenticateUser(req, res, next) {
     });
   }
 
-  const user = users.find(user => user.id === session.id);
+  const user = users.find(
+    user => user.id === session.id
+  );
 
   if (!user) {
     return res.status(401).json({
@@ -104,7 +108,7 @@ function authenticateUser(req, res, next) {
 }
 
 // =========================
-// ADMIN AUTH MIDDLEWARE
+// ADMIN AUTH
 // =========================
 
 function authenticateAdmin(req, res, next) {
@@ -119,7 +123,9 @@ function authenticateAdmin(req, res, next) {
     });
   }
 
-  const admin = admins.find(admin => admin.id === session.id);
+  const admin = admins.find(
+    admin => admin.id === session.id
+  );
 
   if (!admin) {
     return res.status(401).json({
@@ -134,7 +140,7 @@ function authenticateAdmin(req, res, next) {
 }
 
 // =========================
-// HEALTH CHECK
+// HEALTH
 // =========================
 
 app.get("/api/health", (req, res) => {
@@ -149,13 +155,11 @@ app.get("/api/health", (req, res) => {
 // =========================
 
 app.get("/api/tasks", (req, res) => {
-  res.json({
-    tasks
-  });
+  res.json({ tasks });
 });
 
 // =========================
-// USER REGISTER
+// REGISTER
 // =========================
 
 app.post("/api/register", (req, res) => {
@@ -173,7 +177,8 @@ app.post("/api/register", (req, res) => {
     });
   }
 
-  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedEmail =
+    email.trim().toLowerCase();
 
   const existingUser = users.find(
     user => user.email === normalizedEmail
@@ -189,7 +194,6 @@ app.post("/api/register", (req, res) => {
     id: users.length
       ? Math.max(...users.map(user => user.id)) + 1
       : 1,
-
     name: name.trim(),
     email: normalizedEmail,
     password,
@@ -208,9 +212,7 @@ app.post("/api/register", (req, res) => {
 
   res.json({
     message: "Account created successfully.",
-
     token,
-
     user: {
       id: newUser.id,
       name: newUser.name,
@@ -222,15 +224,16 @@ app.post("/api/register", (req, res) => {
 });
 
 // =========================
-// USER LOGIN
+// LOGIN
 // =========================
 
 app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
 
-  const normalizedEmail = String(email || "")
-    .trim()
-    .toLowerCase();
+  const normalizedEmail =
+    String(email || "")
+      .trim()
+      .toLowerCase();
 
   const user = users.find(
     user =>
@@ -253,9 +256,7 @@ app.post("/api/login", (req, res) => {
 
   res.json({
     message: "Login successful.",
-
     token,
-
     user: {
       id: user.id,
       name: user.name,
@@ -314,7 +315,9 @@ app.post(
       });
     }
 
-    if (req.user.completedTasks.includes(taskId)) {
+    if (
+      req.user.completedTasks.includes(taskId)
+    ) {
       return res.status(400).json({
         error: "You already completed this task."
       });
@@ -326,11 +329,8 @@ app.post(
 
     res.json({
       message: "Task completed successfully.",
-
       reward: task.reward,
-
       balance: req.user.balance,
-
       completedTasks: req.user.completedTasks
     });
   }
@@ -343,9 +343,10 @@ app.post(
 app.post("/api/admin/login", (req, res) => {
   const { email, password } = req.body;
 
-  const normalizedEmail = String(email || "")
-    .trim()
-    .toLowerCase();
+  const normalizedEmail =
+    String(email || "")
+      .trim()
+      .toLowerCase();
 
   const admin = admins.find(
     admin =>
@@ -368,9 +369,7 @@ app.post("/api/admin/login", (req, res) => {
 
   res.json({
     message: "Admin login successful.",
-
     token,
-
     admin: {
       id: admin.id,
       email: admin.email
@@ -386,17 +385,19 @@ app.get(
   "/api/admin/stats",
   authenticateAdmin,
   (req, res) => {
-    const completedTasks = users.reduce(
-      (total, user) =>
-        total + user.completedTasks.length,
-      0
-    );
+    const completedTasks =
+      users.reduce(
+        (total, user) =>
+          total + user.completedTasks.length,
+        0
+      );
 
-    const totalRewards = users.reduce(
-      (total, user) =>
-        total + Number(user.balance),
-      0
-    );
+    const totalRewards =
+      users.reduce(
+        (total, user) =>
+          total + Number(user.balance),
+        0
+      );
 
     res.json({
       users: users.length,
@@ -421,28 +422,27 @@ app.get(
         name: user.name,
         email: user.email,
         balance: user.balance,
-        completedTasks: user.completedTasks.length
+        completedTasks:
+          user.completedTasks.length
       }))
     });
   }
 );
 
 // =========================
-// ADMIN VIEW TASKS
+// ADMIN TASKS
 // =========================
 
 app.get(
   "/api/admin/tasks",
   authenticateAdmin,
   (req, res) => {
-    res.json({
-      tasks
-    });
+    res.json({ tasks });
   }
 );
 
 // =========================
-// ADMIN ADD TASK
+// ADD TASK
 // =========================
 
 app.post(
@@ -455,7 +455,11 @@ app.post(
       reward
     } = req.body;
 
-    if (!title || !description || reward === undefined) {
+    if (
+      !title ||
+      !description ||
+      reward === undefined
+    ) {
       return res.status(400).json({
         error:
           "Title, description and reward are required."
@@ -469,21 +473,20 @@ app.post(
       numericReward < 0
     ) {
       return res.status(400).json({
-        error: "Reward must be a valid number."
+        error:
+          "Reward must be a valid number."
       });
     }
 
     const newTask = {
       id: tasks.length
-        ? Math.max(...tasks.map(task => task.id)) + 1
+        ? Math.max(
+            ...tasks.map(task => task.id)
+          ) + 1
         : 1,
-
       title: title.trim(),
-
       description: description.trim(),
-
       reward: numericReward,
-
       status: "Available"
     };
 
@@ -497,7 +500,7 @@ app.post(
 );
 
 // =========================
-// ADMIN DELETE TASK
+// DELETE TASK
 // =========================
 
 app.delete(
@@ -527,10 +530,25 @@ app.delete(
 );
 
 // =========================
-// FRONTEND FALLBACK
+// FRONTEND
 // =========================
 
-app.use((req, res) => {
+// Only send index.html for browser page requests.
+// Static files such as app.js and style.css
+// are handled by express.static above.
+
+app.get("/", (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      "public",
+      "index.html"
+    )
+  );
+});
+
+// Admin URL
+app.get("/admin", (req, res) => {
   res.sendFile(
     path.join(
       __dirname,
@@ -541,7 +559,7 @@ app.use((req, res) => {
 });
 
 // =========================
-// START SERVER
+// START
 // =========================
 
 app.listen(PORT, "0.0.0.0", () => {
